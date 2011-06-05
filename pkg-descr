@@ -1,0 +1,6 @@
+Verlihub is a hub server for NDMC protocol. It runs on 
+Linux/Unix/Windows/Mac OS X. It is written in C++ and has many usuful 
+plugins including LUA and Python. It has very low RAM/CPU usage and can 
+hold more than 20.000 users
+
+WWW: http://www.verlihub-project.org/

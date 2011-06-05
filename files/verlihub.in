@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# $FreeBSD$
+#
+# PROVIDE: verlihub
+# REQUIRE: DAEMON mysql
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# verlihub_enable (bool):   Set to NO by default.
+#               			Set it to YES to enable verlihub.
+# verlihub_configdir (path):   The directory where the verlihub config files are
+# verlihub_process_owner (string):	Specify which user should run verlihub
+#
+
+. /etc/rc.subr
+
+name="verlihub"
+procname="vh_daemon"
+rcvar=${name}_enable
+
+start_cmd="start"
+stop_cmd="stop"
+
+load_rc_config $name
+
+: ${verlihub_enable="NO"}
+: ${verlihub_configdir="%%PREFIX%%/etc/verlihub/"}
+: ${verlihub_process_owner="root"}
+
+pidfile="${verlihub_configdir}.pid"
+log_file="${verlihub_configdir}/log"
+error_file="${verlihub_configdir}/err"
+command=%%PREFIX%%/bin/${procname}
+command_args="%%PREFIX%%/bin/$[name} > $log_file 2> $err_file &"
+
+start()
+{
+	info "Starting verlihub for ${verlihub_configdir}"
+
+	# Check path to config file
+	if [ ! -d ${verlihub_configdir} ]; then
+		err 1 "missing configuration directory ${verlihub_configdir}"
+	fi;
+
+	# Check if dbconfig exists
+	dbconfig="${verlihub_configdir}/dbconfig"
+	if [ ! -f ${dbconfig} ]; then
+		err 1 "cannot read the configuration file '${dbconfig}'"
+	fi
+
+	# Save old files
+	if [ -f ${log_file} ]; then
+		info "Saving backup for log file"
+		mv -f ${log_file} "${log_file}.old"
+	fi;
+	if [ -f ${error_file} ]; then
+		info "Saving backup for error file"
+		mv -f ${error_file} "${error_file}.old"
+	fi;
+
+	if [ $verlihub_process_owner != "root" ]; then
+		su - ${verlihub_process_owner}
+	fi;
+	export VERLIHUB_CFG=${verlihub_configdir};
+
+	return 0;
+}
+
+stop()
+{
+	info "Stopping verlihub"
+	if [ -f ${pidfile} ]; then
+		rm $pidfile
+	fi
+
+	return 0;
+}
+run_rc_command "$1"
