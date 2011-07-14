@@ -32,8 +32,8 @@ load_rc_config $name
 pidfile="${verlihub_configdir}.pid"
 log_file="${verlihub_configdir}/log"
 error_file="${verlihub_configdir}/err"
-command=%%PREFIX%%/bin/${procname}
-command_args="%%PREFIX%%/bin/$[name} > $log_file 2> $err_file &"
+command="%%PREFIX%%/bin/${procname}"
+command_args="%%PREFIX%%/bin/${name} >$log_file 2>$err_file &"
 
 start()
 {
@@ -60,6 +60,17 @@ start()
 		mv -f ${error_file} "${error_file}.old"
 	fi;
 
+	# Export MySQL socket
+	mysql_host=$(grep -E "db_host ?=" ${dbconfig} 2> /dev/null | sed -e 's/.*= *//')
+	if [ $mysql_host = "localhost" ] || [ $mysql_host = "127.0.0.1" ] || [ "_$mysql_host" = "_" ]; then
+		if [ -r "/etc/mysql/my.cnf" ]; then
+			socket=$(cat "/etc/mysql/my.cnf" | grep "^socket" | head -n 1 | cut -d"=" -f2| tr -d " ")
+			if [ ! -z ${socket} ]; then
+				export "MYSQL_UNIX_PORT=${socket}"
+			fi
+		fi
+	fi
+
 	if [ $verlihub_process_owner != "root" ]; then
 		su - ${verlihub_process_owner}
 	fi;
@@ -77,4 +88,5 @@ stop()
 
 	return 0;
 }
+
 run_rc_command "$1"

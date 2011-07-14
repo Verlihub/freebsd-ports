@@ -23,8 +23,8 @@ BUILD_DEPENDS=	bash:${PORTSDIR}/shells/bash \
 			mysql51-client:${PORTSDIR}/databases/mysql51-client
 RUN_DEPENDS=	${BUILD_DEPENDS}
 
-USE_RC_SUBR=	verlihub
-SUB_FILES=	verlihub
+USE_RC_SUBR=	verlihub-daemon
+SUB_FILES=	verlihub-daemon
 SUB_LIST=	PREFIX=${PREFIX}
 USE_GCC=	4.2+
 USE_CMAKE=	yes
@@ -87,7 +87,7 @@ post-install:
 	@${ECHO_MSG} " You are now ready to use VerliHub into your system."
 	@${ECHO_MSG} " Please report all bugs to http://www.verlihub-project.org/bugs"
 	@${ECHO_MSG} " "
-	@${ECHO_MSG} " Now you could use deamon editing config file ${PREFIX}/etc/rc.conf."
+	@${ECHO_MSG} " Now you could use deamon editing config file /etc/rc.conf."
 	@${ECHO_MSG} " Check config var in init file. Then start VerliHub daemon using"
 	@${ECHO_MSG} " ${PREFIX}/etc/rc.d/verlihub start"
 	@${ECHO_MSG} " "
