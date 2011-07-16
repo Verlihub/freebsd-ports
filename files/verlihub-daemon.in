@@ -18,75 +18,87 @@
 
 name="verlihub"
 procname="vh_daemon"
-rcvar=${name}_enable
+rcvar=`set_rcvar`
 
-start_cmd="start"
-stop_cmd="stop"
-
+# Load default configs
 load_rc_config $name
-
 : ${verlihub_enable="NO"}
 : ${verlihub_configdir="%%PREFIX%%/etc/verlihub/"}
-: ${verlihub_process_owner="root"}
+: ${verlihub_user="root"}
 
-pidfile="${verlihub_configdir}.pid"
+# Set files
+pidfile="${verlihub_configdir}/pid"
 log_file="${verlihub_configdir}/log"
-error_file="${verlihub_configdir}/err"
-command="%%PREFIX%%/bin/${procname}"
-command_args="%%PREFIX%%/bin/${name} >$log_file 2>$err_file &"
+err_file="${verlihub_configdir}/err"
+required_dirs="${verlihub_configdir}"
+required_files="${verlihub_configdir}/dbconfig"
+
+# Set commands
+command="%%PREFIX%%/bin/${procname} %%PREFIX%%/bin/${name}"
+command_args=">$log_file 2>$err_file &"
+start_cmd="start"
+stop_cmd="stop"
+restart_cmd="restart"
 
 start()
 {
-	info "Starting verlihub for ${verlihub_configdir}"
-
-	# Check path to config file
-	if [ ! -d ${verlihub_configdir} ]; then
-		err 1 "missing configuration directory ${verlihub_configdir}"
-	fi;
-
-	# Check if dbconfig exists
-	dbconfig="${verlihub_configdir}/dbconfig"
-	if [ ! -f ${dbconfig} ]; then
-		err 1 "cannot read the configuration file '${dbconfig}'"
+	pid=$(check_pidfile ${pidfile} "%%PREFIX%%/bin/${procname}" "%%PREFIX%%/bin/bash")
+        if [ -n "${pid}" ]; then
+		err 1 "hub is already running with PID ${pid}"
 	fi
+
+	info "starting hub with config folder '${verlihub_configdir}'"
 
 	# Save old files
-	if [ -f ${log_file} ]; then
-		info "Saving backup for log file"
+        if [ -f ${log_file} ]; then
+		info "saving backup for log file"
 		mv -f ${log_file} "${log_file}.old"
-	fi;
-	if [ -f ${error_file} ]; then
-		info "Saving backup for error file"
-		mv -f ${error_file} "${error_file}.old"
-	fi;
+        fi;
+        if [ -f ${err_file} ]; then
+		info "saving backup for error file"
+		mv -f ${err_file} "${err_file}.old"
+        fi;
 
-	# Export MySQL socket
-	mysql_host=$(grep -E "db_host ?=" ${dbconfig} 2> /dev/null | sed -e 's/.*= *//')
-	if [ $mysql_host = "localhost" ] || [ $mysql_host = "127.0.0.1" ] || [ "_$mysql_host" = "_" ]; then
-		if [ -r "/etc/mysql/my.cnf" ]; then
-			socket=$(cat "/etc/mysql/my.cnf" | grep "^socket" | head -n 1 | cut -d"=" -f2| tr -d " ")
-			if [ ! -z ${socket} ]; then
-				export "MYSQL_UNIX_PORT=${socket}"
-			fi
-		fi
-	fi
-
-	if [ $verlihub_process_owner != "root" ]; then
-		su - ${verlihub_process_owner}
-	fi;
+	# Run hub
 	export VERLIHUB_CFG=${verlihub_configdir};
+	su -m ${verlihub_user} -c "${command} ${command_args}"
+
+	# Check if pid is returned
+	sleep 2
+	pid=$(check_process "%%PREFIX%%/bin/${procname}" "%%PREFIX%%/bin/bash")
+	echo ${pid} > ${pidfile}
+
+	# Check if hub is running
+	pid=$(check_pidfile ${pidfile} "%%PREFIX%%/bin/${procname}" "%%PREFIX%%/bin/bash")
+	if [ ! -n "${pid}" ]; then
+		rm -f ${pidfile}
+		err 1 "hub is not running. Please check '${log_file}' and '${error_file}' for more information"
+	fi
 
 	return 0;
 }
 
 stop()
 {
-	info "Stopping verlihub"
-	if [ -f ${pidfile} ]; then
-		rm $pidfile
+	# Check if hub is already running
+	pid=$(check_pidfile ${pidfile} "%%PREFIX%%/bin/${procname}" "%%PREFIX%%/bin/bash")
+	if [ ! -n "${pid}" ]; then
+		err 1 "hub with config path '${verlihub_configdir}' is not running"
 	fi
 
+	info "stopping verlihub"
+	if ! kill ${pid} > /dev/null 2>&1 ; then
+		err 1 " USER HAS NO RIGHT TO STOP THE PROCESS\nPlease use 'kill -9 $PID_RESULT' as root" 
+	fi
+	rm -f ${pidfile}
+
 	return 0;
+}
+
+restart()
+{
+	stop;
+	start;
 }
 
 run_rc_command "$1"
