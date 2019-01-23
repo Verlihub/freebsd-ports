@@ -22,8 +22,8 @@ BUILD_DEPENDS=	bash:${PORTSDIR}/shells/bash \
 			pcre:${PORTSDIR}/devel/pcre \
 RUN_DEPENDS=	${BUILD_DEPENDS}
 
-USE_RC_SUBR=	verlihub-daemon
-SUB_FILES=	verlihub-daemon
+USE_RC_SUBR=	verlihub
+SUB_FILES=	verlihub
 SUB_LIST=	PREFIX=${PREFIX}
 USE_CMAKE=	yes
 USE_MYSQL=	yes
