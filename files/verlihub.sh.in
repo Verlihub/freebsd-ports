@@ -1,0 +1,22 @@
+#!/bin/sh
+sleep 30
+
+case "$1" in
+    start)
+    echo "Starting Verlihub..."
+    su -s root -c '/usr/local/bin/vh -r'
+    ;;
+    stop)
+    echo "Stopping Verlihub..."
+    su -s root -c '/usr/local/bin/vh -s'
+    ;;
+    restart)
+    echo "Restarting Verlihub..."
+    su -s root -c '/usr/local/bin/vh -q'
+    ;;
+    *)
+    echo "Usage: /usr/local/etc/init.d/verlihub.sh {start|stop|restart}"
+    exit 1
+    ;;
+esac
+exit 0
