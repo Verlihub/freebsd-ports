@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	verlihub
-PORTVERSION=	1.0
+PORTVERSION=	1.1.0.0
 PORTEPOCH=	1
 CATEGORIES=	net-p2p
 MASTER_SITES=	http://www.verlihub-project.org/ SF/${PORTNAME}/Verlihub/${PORTVERSION}
@@ -18,70 +18,75 @@ WRKSRC=		${WRKDIR}/${PORTNAME}
 LICENSE=	GPLv2
 
 BUILD_DEPENDS=	bash:${PORTSDIR}/shells/bash \
-			GeoIP:${PORTSDIR}/net/GeoIP \
+			libmaxminddb.so:net/libmaxminddb \
 			pcre:${PORTSDIR}/devel/pcre \
-			mysql51-client:${PORTSDIR}/databases/mysql51-client
 RUN_DEPENDS=	${BUILD_DEPENDS}
 
-USE_RC_SUBR=	verlihub-daemon
-SUB_FILES=	verlihub-daemon
+USE_RC_SUBR=	verlihub
+SUB_FILES=	verlihub
 SUB_LIST=	PREFIX=${PREFIX}
-USE_GCC=	4.2+
 USE_CMAKE=	yes
+USE_MYSQL=	yes
 USE_LDCONFIG=	yes
 USE_OPENSSL=	yes
 
-OPTIONS=	CHATROOM "Create individual chatrooms" On \
-		FORBID  "Filter messages for forbidden words" On \
-		IPLOG "Save log history for IP and nicknames" On \
-		ISP "Check connection, nicknames, minimum shares, etc" On\
-		LUA "Load scripts written in LUA language" On \
-		FLOODPROT "more control for hub flooding" On \
-		MESSENGER "Sends a message to offline users" Off \
-		PYTHON "Use scripts written with Python" On \
-		REPLACER "Replaces given patterns in text" On \
-		STATS "Periodically saves statistics in the DB" Off
+#USE_GCC=	6+
+
+USES=		cmake
+
+#OPTIONS=	CHATROOM "Create individual chatrooms" On \
+#		FORBID  "Filter messages for forbidden words" On \
+#		IPLOG "Save log history for IP and nicknames" On \
+#		ISP "Check connection, nicknames, minimum shares, etc" On\
+#		LUA "Load scripts written in LUA language" On \
+#		FLOODPROT "more control for hub flooding" On \
+#		MESSENGER "Sends a message to offline users" Off \
+#		PYTHON "Use scripts written with Python" On \
+#		REPLACER "Replaces given patterns in text" On \
+#		STATS "Periodically saves statistics in the DB" Off
 
 .include <bsd.port.options.mk>
 
-CMAKE_OUTSOURCE=1
-.if !defined(WITHOUT_NLS)
-USE_GETTEXT=	yes
-.endif
-.if defined(WITHOUT_CHATROOM)
-CMAKE_ARGS+=	-DWITH_CHATROOM:BOOL=OFF
-.endif
-.if defined(WITHOUT_FORBID)
-CMAKE_ARGS+=	-DWITH_FORBID:BOOL=OFF
-.endif
-.if defined(WITHOUT_IPLOG)
-CMAKE_ARGS+=	-DWITH_IPLOG:BOOL=OFF
-.endif
-.if defined(WITHOUT_ISP)
-CMAKE_ARGS+=	-DWITH_ISP:BOOL=OFF
-.endif
-.if defined(WITHOUT_FLOODPROT)
-CMAKE_ARGS+=	-DWITH_FLOODPROT:BOOL=OFF
-.endif
-.if defined(WITHOUT_LUA)
-CMAKE_ARGS+=	-DWITH_LUA:BOOL=OFF
-.else
-USE_LUA=	5.1
-.endif
-.if defined(WITHOUT_MESSENGER)
-CMAKE_ARGS+=	-DWITH_MESSENGER:BOOL=OFF
-.endif
-.if defined(WITHOUT_PYTHON)
-CMAKE_ARGS+=	-DWITH_PYTHON:BOOL=OFF
-.else
-USE_PYTHON=	 2.7
-.endif
-.if defined(WITHOUT_REPLACER)
-CMAKE_ARGS+=	-DWITH_REPLACER:BOOL=OFF
-.endif
-.if defined(WITHOUT_STATS)
-CMAKE_ARGS+=	-DWITH_STATS:BOOL=OFF
-.endif
+CMAKE_ARGS+=	-DUSE_CUSTOM_AUTOSPRINTF:BOOL=ON
+
+#CMAKE_OUTSOURCE=1
+#.if !defined(WITHOUT_NLS)
+#USE_GETTEXT=	yes
+#.endif
+#.if defined(WITHOUT_CHATROOM)
+#CMAKE_ARGS+=	-DWITH_CHATROOM:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_FORBID)
+#CMAKE_ARGS+=	-DWITH_FORBID:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_IPLOG)
+#CMAKE_ARGS+=	-DWITH_IPLOG:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_ISP)
+#CMAKE_ARGS+=	-DWITH_ISP:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_FLOODPROT)
+#CMAKE_ARGS+=	-DWITH_FLOODPROT:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_LUA)
+#CMAKE_ARGS+=	-DWITH_LUA:BOOL=OFF
+#.else
+#USE_LUA=	5.1
+#.endif
+#.if defined(WITHOUT_MESSENGER)
+#CMAKE_ARGS+=	-DWITH_MESSENGER:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_PYTHON)
+#CMAKE_ARGS+=	-DWITH_PYTHON:BOOL=OFF
+#.else
+#USE_PYTHON=	 2.7
+#.endif
+#.if defined(WITHOUT_REPLACER)
+#CMAKE_ARGS+=	-DWITH_REPLACER:BOOL=OFF
+#.endif
+#.if defined(WITHOUT_STATS)
+#CMAKE_ARGS+=	-DWITH_STATS:BOOL=OFF
+#.endif
 
 post-install:
 	@${ECHO_MSG} " You are now ready to use VerliHub into your system."
@@ -92,8 +97,8 @@ post-install:
 	@${ECHO_MSG} " ${PREFIX}/etc/rc.d/verlihub start"
 	@${ECHO_MSG} " "
 	@${ECHO_MSG} " If you need help you can read the manual at"
-	@${ECHO_MSG} " http://www.verlihub-project.org/manual or ask on forum at"
-	@${ECHO_MSG} " http://www.verlihub-project.org/discussions"
+	@${ECHO_MSG} " https://github.com/verlihub/verlihub/wiki or ask on support Hub:"
+	@${ECHO_MSG} " dchub://hub.verlihub.net:7777"
 	@${ECHO_MSG} " "
 	@${ECHO_MSG} " You need to configure verlihub before starting it."
 	@${ECHO_MSG} " Use vh_manage or vh_manage_cli scripts"
